@@ -1,130 +1,70 @@
 # deepsort_yolov2_pytorch
-### pytorch-yolo2
-Convert https://pjreddie.com/darknet/yolo/ into pytorch. This repository is trying to achieve the following goals.
-- [x] implement RegionLoss, MaxPoolStride1, Reorg, GolbalAvgPool2d
-- [x] implement route layer
-- [x] detect, partial, valid functions
-- [x] load darknet cfg
-- [x] load darknet saved weights
-- [x] save as darknet weights
-- [x] fast evaluation
-- [x] pascal voc validation
-- [x] train pascal voc
-- [x] LMDB data set
-- [x] Data augmentation
-- [x] load/save caffe prototxt and weights
-- [x] **reproduce darknet's training results**
-- [x] [convert weight/cfg between pytorch caffe and darknet](https://github.com/marvis/pytorch-caffe-darknet-convert)
-- [x] add focal loss
+# Deep Sort with PyTorch
 
----
-#### Detection Using A Pre-Trained Model
-```
-wget http://pjreddie.com/media/files/yolo.weights
-python detect.py cfg/yolo.cfg yolo.weights data/dog.jpg
-```
-You will see some output like this:
-```
-layer     filters    size              input                output
-    0 conv     32  3 x 3 / 1   416 x 416 x   3   ->   416 x 416 x  32
-    1 max          2 x 2 / 2   416 x 416 x  32   ->   208 x 208 x  32
-    ......
-   30 conv    425  1 x 1 / 1    13 x  13 x1024   ->    13 x  13 x 425
-   31 detection
-Loading weights from yolo.weights... Done!
-data/dog.jpg: Predicted in 0.014079 seconds.
-truck: 0.934711
-bicycle: 0.998013
-dog: 0.990524
-```
----
-#### Real-Time Detection on a Webcam
-```
-python demo.py cfg/tiny-yolo-voc.cfg tiny-yolo-voc.weights
-```
----
+## Introduction
+This is an implement of MOT tracking algorithm deep sort. Deep sort is basicly the same with sort but added a CNN model to extract features in image of human part bounded by a detector. This CNN model is indeed a RE-ID model and the detector used in [PAPER](https://arxiv.org/abs/1703.07402) is FasterRCNN , and the original source code is [HERE](https://github.com/nwojke/deep_sort).  
+However in original code, the CNN model is implemented with tensorflow, which I'm not familier with. SO I re-implemented the CNN feature extraction model with PyTorch, and changed the CNN model a little bit. Also, I use **YOLO3** to generate bboxes instead of FasterRCNN.
 
-#### Training YOLO on VOC
-##### Get The Pascal VOC Data
-```
-wget https://pjreddie.com/media/files/VOCtrainval_11-May-2012.tar
-wget https://pjreddie.com/media/files/VOCtrainval_06-Nov-2007.tar
-wget https://pjreddie.com/media/files/VOCtest_06-Nov-2007.tar
-tar xf VOCtrainval_11-May-2012.tar
-tar xf VOCtrainval_06-Nov-2007.tar
-tar xf VOCtest_06-Nov-2007.tar
-```
-##### Generate Labels for VOC
-```
-wget http://pjreddie.com/media/files/voc_label.py
-python voc_label.py
-cat 2007_train.txt 2007_val.txt 2012_*.txt > voc_train.txt
-```
-##### Modify Cfg for Pascal Data
-Change the cfg/voc.data config file
-```
-train  = train.txt
-valid  = 2007_test.txt
-names = data/voc.names
-backup = backup
-```
-##### Download Pretrained Convolutional Weights
-Download weights from the convolutional layers
-```
-wget http://pjreddie.com/media/files/darknet19_448.conv.23
-```
-or run the following command:
-```
-python partial.py cfg/darknet19_448.cfg darknet19_448.weights darknet19_448.conv.23 23
-```
-##### Train The Model
-```
-python train.py cfg/voc.data cfg/yolo-voc.cfg darknet19_448.conv.23
-```
-##### Evaluate The Model
-```
-python valid.py cfg/voc.data cfg/yolo-voc.cfg yolo-voc.weights
-python scripts/voc_eval.py results/comp4_det_test_
-```
-mAP test on released models
-```
-yolo-voc.weights 544 0.7682 (paper: 78.6)
-yolo-voc.weights 416 0.7513 (paper: 76.8)
-tiny-yolo-voc.weights 416 0.5410 (paper: 57.1)
+## Dependencies
+- python 3 (python2 not sure)
+- numpy
+- cv2
+- sklearn
+- pytorch 0.4.0
 
+## Quick Start
+0. Check all dependencies installed
+
+1. Clone this repository
 ```
----
-#### Focal Loss 
-A implementation of paper [Focal Loss for Dense Object Detection](https://arxiv.org/abs/1708.02002)
+git clone git@github.com:ZQPei/deep_sort_pytorch.git
+```
+2. Download YOLO3 parameters
+```
+cd YOLO3/
+wget https://pjreddie.com/media/files/yolov3.weights
+cd ..
+```
+3. Download deepsort parameters ckpt.t7
+```
+cd deep/checkpoint
+# download ckpt.t7 from 
+https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6 to this folder
+cd ../../
+```  
+4. Run demo
+```
+python demo_yolo3_deepsort.py [YOUR_VIDEO_PATH]
+```
 
-We get the results by using Focal Loss to replace CrossEntropyLoss in RegionLosss.
+## Training the RE-ID model
+The original model used in paper is in original_model.py, and its parameter here [original_ckpt.t7](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6).  
 
- gama       | training set | val set | mAP@416 | mAP@544 | Notes
----         |---           |---      |---      |---      |---
- 0          |VOC2007+2012  | VOC2007 | 73.05   |  74.69  | std-Cross Entropy Loss
- 1          |VOC2007+2012  | VOC2007 | 73.63   |  75.26  | Focal Loss
- 2          |VOC2007+2012  | VOC2007 |**74.08**|**75.49**| Focal Loss
- 3          |VOC2007+2012  | VOC2007 |  73.73  |  75.20  | Focal Loss
- 4          |VOC2007+2012  | VOC2007 |  73.53  |  74.95  | Focal Loss
+To train the model, first you need download [Market1501](http://www.liangzheng.org/Project/project_reid.html) dataset or [Mars](http://www.liangzheng.com.cn/Project/project_mars.html) dataset.  
+
+Then you can try [train.py](deep/train.py) to train your own parameter and evaluate it using [test.py](deep/test.py) and [evaluate.py](deep/evalute.py).
+![train.jpg](deep/train.jpg)
+
+## Demo videos and images
+[demo.avi](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6)
+[demo2.avi](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6)
+
+![1.jpg](images/1.jpg)
+![2.jpg](images/2.jpg)
+
+All files can also be accessed by BaiduDisk!  
+linker：https://pan.baidu.com/s/1TEFdef9tkJVT0Vf0DUZvrg  
+passwd：1eqo
 
 
----
-#### Problems
-##### 1. Running variance difference between darknet and pytorch
-Change the code in normalize_cpu to make the same result
-```
-normalize_cpu:
-x[index] = (x[index] - mean[f])/(sqrt(variance[f] + .00001f));
-``` 
-#### Training on your own data
-1. Padding your images into square size and produce the corresponding label files.
-2. Modify the resize strageties in listDataset. Currently the resize scales range from 320 ~ 608, and the resize intervals is 64, which should be equal to batch_size or several times of batch_size. 
-3. Add warm up learning rate (scales=**0.1**,10,.1,.1)
-4. Train your model as VOC does.
+## References
+- paper: [Simple Online and Realtime Tracking with a Deep Association Metric](https://arxiv.org/abs/1703.07402)
 
----
-#### License
-MIT License (see LICENSE file).
+- code: [nwojke/deep_sort](https://github.com/nwojke/deep_sort)
 
-#### Contribution
-Thanks for the contributions from @iceflame89 for the image augmentation and @huaijin-chen for focal loss.
+- paper: [YOLOv3](https://pjreddie.com/media/files/papers/YOLOv3.pdf)
+
+- code: [Joseph Redmon/yolov3](https://pjreddie.com/darknet/yolo/)
+
+
+
