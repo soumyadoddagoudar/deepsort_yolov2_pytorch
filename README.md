@@ -34,7 +34,7 @@ cd ../../
 ```  
 4. Run demo
 ```
-python demo_yolo3_deepsort.py [YOUR_VIDEO_PATH]
+python demo_yolo2_deepsort.py [YOUR_VIDEO_PATH]
 ```
 
 ## Training the RE-ID model
