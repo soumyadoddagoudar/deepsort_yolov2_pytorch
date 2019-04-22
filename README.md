@@ -17,12 +17,12 @@ However in original code, the CNN model is implemented with tensorflow, which I'
 
 1. Clone this repository
 ```
-git clone git@github.com:ZQPei/deep_sort_pytorch.git
+https://github.com/soumyadoddagoudar/deepsort_yolov2_pytorch.git
 ```
-2. Download YOLO3 parameters
+2. Download YOLO2 parameters
 ```
-cd YOLO3/
-wget https://pjreddie.com/media/files/yolov3.weights
+cd YOLO2/
+wget http://pjreddie.com/media/files/yolo.weights
 cd ..
 ```
 3. Download deepsort parameters ckpt.t7
@@ -46,8 +46,8 @@ Then you can try [train.py](deep/train.py) to train your own parameter and evalu
 ![train.jpg](deep/train.jpg)
 
 ## Demo videos and images
-[demo.avi](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6)
-[demo2.avi](https://drive.google.com/drive/folders/1xhG0kRH1EX5B9_Iz8gQJb7UNnn_riXi6)
+[demo.avi](images/1.jpg)
+[demo2.avi](images/2.jpg)
 
 ![1.jpg](images/1.jpg)
 ![2.jpg](images/2.jpg)
