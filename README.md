@@ -64,7 +64,9 @@ passwd：1eqo
 
 - code: [shashank-bhatt/yolo2](https://github.com/shashank-bhatt-07/pytorch-yolov2-py3-torch1)
 
--code:[ZQPei/deep_sort_pytorch](https://github.com/ZQPei/deep_sort_pytorch)
+- code: [ZQPei/deep_sort_pytorch](https://github.com/ZQPei/deep_sort_pytorch)
+
+
 
 
 
